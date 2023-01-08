@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"go/build"
+	"instargram/config"
 	"instargram/routes"
 	"log"
 	"os"
@@ -10,10 +13,15 @@ import (
 )
 
 func main() {
+	fmt.Println("build.Default.GOPATH => ", build.Default.GOPATH) //C:\Users\Administrator\go
+	// go env -w GO111MODULE=off
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
+	config.InitDB()
+	defer config.CloseDB()
 
 	r := gin.Default()
 
