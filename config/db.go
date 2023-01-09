@@ -10,8 +10,9 @@ import (
 var db *gorm.DB
 
 func InitDB() {
+	var err error
 	dsn := os.Getenv("DATABASE_CONNECTION")
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -24,5 +25,9 @@ func GetDB() *gorm.DB {
 }
 
 func CloseDB() {
-
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(err)
+	}
+	sqlDB.Close()
 }

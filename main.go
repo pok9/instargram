@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/build"
 	"instargram/config"
+	"instargram/migrations"
 	"instargram/routes"
 	"log"
 	"os"
@@ -22,6 +23,7 @@ func main() {
 
 	config.InitDB()
 	defer config.CloseDB()
+	migrations.Migrate()
 
 	r := gin.Default()
 

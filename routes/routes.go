@@ -1,17 +1,18 @@
 package routes
 
 import (
+	"instargram/config"
 	"instargram/controllers"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Serve(r *gin.Engine) {
-	articlesGroup := r.Group("/api/v1/articles")
-	articleController := controllers.Articles{}
+	db := config.GetDB()
+	usersGroup := r.Group("/api/v1/users")
+	userController := controllers.Users{DB: db}
 	{
-		articlesGroup.GET("", articleController.FindAll)
-		articlesGroup.GET("/:id", articleController.FindOne)
+		usersGroup.POST("/sign-up-with-email", userController.SignUpWithEmail)
 	}
 
 }
