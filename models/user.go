@@ -1,8 +1,10 @@
 package models
 
 import (
+	"fmt"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -12,5 +14,11 @@ type User struct {
 	Password  string    `json:"password"`
 	FullName  string    `json:"fullName"`
 	Birthdate time.Time `json:"birthdate"`
-	Photo     string    `json:"photo"`
+	Avatar    string    `json:"avatar"`
+}
+
+func (u *User) GenerateEncryptPassword() string {
+	fmt.Printf("u.Password => %#v", u.Password)
+	hash, _ := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+	return string(hash)
 }

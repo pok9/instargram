@@ -3,16 +3,24 @@ package routes
 import (
 	"instargram/config"
 	"instargram/controllers"
+	"instargram/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func Serve(r *gin.Engine) {
 	db := config.GetDB()
-	usersGroup := r.Group("/api/v1/users")
-	userController := controllers.Users{DB: db}
+	v1 := r.Group("/api/v1")
+	authenticate := middleware.Authenticate().MiddlewareFunc()
+
+	authGroup := v1.Group("/auth")
+	autController := controllers.Auth{DB: db}
 	{
-		usersGroup.POST("/sign-up-with-email", userController.SignUpWithEmail)
+		authGroup.POST("/sign-up-with-email", autController.SignUpWithEmail)
+		authGroup.PATCH("/:email", autController.Update)
+		authGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
+		authGroup.GET("/profile", authenticate, autController.GetProfile)
+		authGroup.PATCH("/profile", authenticate, autController.UpdateProfile)
 	}
 
 }
