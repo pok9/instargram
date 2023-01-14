@@ -10,11 +10,13 @@ import (
 
 type User struct {
 	gorm.Model
-	Email     string    `json:"email"`
-	Password  string    `json:"password"`
-	FullName  string    `json:"fullName"`
-	Birthdate time.Time `json:"birthdate"`
-	Avatar    string    `json:"avatar"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phoneNumber"`
+	Password    string    `json:"password"`
+	Username    string    `json:"username" gorm:"uniqueIndex"` // unique
+	FullName    string    `json:"fullName"`
+	Birthdate   time.Time `json:"birthdate"`
+	Avatar      string    `json:"avatar"`
 }
 
 func (u *User) GenerateEncryptPassword() string {

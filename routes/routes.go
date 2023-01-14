@@ -15,12 +15,20 @@ func Serve(r *gin.Engine) {
 
 	authGroup := v1.Group("/auth")
 	autController := controllers.Auth{DB: db}
+	authGroup.POST("/sign-up-with-email", autController.SignUpWithEmail)
+	authGroup.PATCH("/:email", autController.Update)
+	authGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
+	authGroup.POST("/sign-up", autController.SignUp)
+	authGroup.Use(authenticate)
 	{
-		authGroup.POST("/sign-up-with-email", autController.SignUpWithEmail)
-		authGroup.PATCH("/:email", autController.Update)
-		authGroup.POST("/sign-in", middleware.Authenticate().LoginHandler)
 		authGroup.GET("/profile", authenticate, autController.GetProfile)
 		authGroup.PATCH("/profile", authenticate, autController.UpdateProfile)
 	}
 
+	userGroup := v1.Group("/user")
+	userController := controllers.User{DB: db}
+	userGroup.Use(authenticate)
+	{
+		userGroup.PUT("/birdate", userController.UpdateUserBirdate)
+	}
 }

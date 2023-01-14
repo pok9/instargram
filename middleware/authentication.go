@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"instargram/config"
 	"instargram/models"
 	"log"
@@ -12,8 +13,9 @@ import (
 )
 
 type SignIn struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email       string `json:"email,omitempty" binding:"omitempty,required,email"`
+	PhoneNumber string `json:"phoneNumber,omitempty" binding:"omitempty,required,len=10,number"`
+	Password    string `json:"password" binding:"required"`
 }
 
 var identityKey = "sub"
@@ -50,8 +52,9 @@ func Authenticate() *jwt.GinJWTMiddleware {
 				return nil, jwt.ErrMissingLoginValues
 			}
 
+			fmt.Printf("form => %+v", form)
 			db := config.GetDB()
-			if db.First(&user, "email = ?", form.Email).RowsAffected == 0 {
+			if db.First(&user, "email = ? or phone_number = ?", form.Email, form.PhoneNumber).RowsAffected == 0 {
 				return nil, jwt.ErrFailedAuthentication
 			}
 

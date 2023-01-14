@@ -13,6 +13,10 @@ func Migrate() {
 		m1673267911CreateUsersTable(),
 		m1673447665CreatePostMainsTable(),
 		m1673448560AddUserIDToPostMains(),
+		m1673725083CreatePostsTable(),
+		m1673725240CreateLikesTable(),
+		m1673725714CreateFollowersTable(),
+		m1673726461CreateCommentsTable(),
 	})
 	if err := m.Migrate(); err != nil {
 		log.Fatalf("Could not migrate: %v", err)

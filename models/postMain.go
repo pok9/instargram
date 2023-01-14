@@ -7,6 +7,6 @@ import (
 type PostMain struct {
 	gorm.Model
 	Caption string `json:"caption"`
-	UserID  uint   `json:"user_id"`
+	UserID  uint   `json:"userID"`
 	User    User   `gorm:"foreignKey:UserID"`
 }
