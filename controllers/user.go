@@ -1,8 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"instargram/models"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +16,31 @@ import (
 
 type User struct {
 	DB *gorm.DB
+}
+
+type userRes struct {
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
+	FullName string `json:"fullName"`
+}
+
+// /auth/profile => jwt => sub (UserID) => User => User
+func (u *User) GetProfile(ctx *gin.Context) {
+	fmt.Println("user2 => ", ctx.Keys["sub"])
+	// user
+	sub, ok := ctx.Get("sub")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user := sub.(*models.User)
+
+	fmt.Println("user => ", user)
+
+	var serializedUser userRes
+	copier.Copy(&serializedUser, user)
+	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
 }
 
 //update birthdate  day month year to date
@@ -45,6 +74,69 @@ func (u *User) UpdateUserBirdate(ctx *gin.Context) {
 		return
 	}
 	serializedUser := updateUserBirdateRes{}
+	copier.CopyWithOption(&serializedUser, &user, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
+}
+
+type UpdateUserAvatar struct {
+	Avatar *multipart.FileHeader `form:"avatar" binding:"required"`
+}
+
+type updateUserAvatarRes struct {
+	Avatar string `json:"avatar,omitempty"`
+}
+
+func (u *User) UpdateUserAvatar(ctx *gin.Context) {
+	sub, ok := ctx.Get("sub")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user := sub.(*models.User)
+
+	// Get file
+	file, err := ctx.FormFile("avatar")
+	if err != nil || file == nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user.Avatar != "" {
+		// Delete old file
+		//http://127.0.0.1:5000/upload/articles/<ID>/image.png
+		// 1. /upload/articles/<ID>/image.png
+		user.Avatar = strings.Replace(user.Avatar, os.Getenv("HOST"), "", 1)
+		// 2.<WD>/upload/articles/<ID>/image.png
+		pwd, _ := os.Getwd()
+		fmt.Println("os.Getwd() => ", pwd)
+		// 3.Remove <WD>/upload/articles/<ID>image.png
+		fmt.Println("user.Avatar => ", user.Avatar)
+		os.Remove(pwd + user.Avatar)
+	}
+
+	// Create Path
+	// ID => 8, uploads/users/8
+	path := "uploads/users/" + string(user.ID)
+	os.MkdirAll(path, 0755)
+
+	// Upload File
+
+	//uploads/users/8/image.png
+	filename := path + "/" + file.Filename
+	if err := ctx.SaveUploadedFile(file, filename); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Attach File to user
+	user.Avatar = os.Getenv("HOST") + "/" + filename
+
+	if err := u.DB.Save(&user).Error; err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	serializedUser := updateUserAvatarRes{}
 	copier.CopyWithOption(&serializedUser, &user, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
 	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
@@ -85,28 +177,6 @@ func (u *User) FollowUser(ctx *gin.Context) {
 	copier.CopyWithOption(&serializedFollower, &follower, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
 	ctx.JSON(http.StatusOK, gin.H{"follower": serializedFollower})
-}
-
-type userRes struct {
-	ID       uint   `json:"id"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
-	FullName string `json:"fullName"`
-}
-
-// /auth/profile => jwt => sub (UserID) => User => User
-func (a *Auth) GetProfile(ctx *gin.Context) {
-	// user
-	sub, ok := ctx.Get("sub")
-	if !ok {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	user := sub.(*models.User)
-
-	var serializedUser userRes
-	copier.Copy(&serializedUser, user)
-	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
 }
 
 // func setUserImage(ctx *gin.Context, user *models.User) error {

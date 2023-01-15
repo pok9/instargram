@@ -29,6 +29,11 @@ func main() {
 
 	// http://127/0.0.1:8080/uploads/articles/8/photo123.jpg
 	r.Static("/uploads", "./uploads")
+	// uploadDirs := [...]string{"articles", "users"}
+	uploadDirs := [...]string{"users"}
+	for _, dir := range uploadDirs {
+		os.MkdirAll("uploads/"+dir, 0755)
+	}
 
 	routes.Serve(r)
 

@@ -36,10 +36,11 @@ func Authenticate() *jwt.GinJWTMiddleware {
 			id := claim[identityKey]
 
 			db := config.GetDB()
-			if db.First(&user, uint(id.(float64))).RowsAffected == 0 {
+			fmt.Printf("pok-id => %#v", id)
+			if db.First(&user, "id = ?", id).RowsAffected == 0 {
 				return nil
 			}
-
+			fmt.Printf("user => %+v", user)
 			return &user
 		},
 
@@ -54,9 +55,20 @@ func Authenticate() *jwt.GinJWTMiddleware {
 
 			fmt.Printf("form => %+v", form)
 			db := config.GetDB()
-			if db.First(&user, "email = ? or phone_number = ?", form.Email, form.PhoneNumber).RowsAffected == 0 {
+
+			if form.Email != "" {
+				if db.First(&user, "email = ?", form.Email).RowsAffected == 0 {
+					return nil, jwt.ErrFailedAuthentication
+				}
+			} else if form.PhoneNumber != "" {
+				if db.First(&user, "phone_number = ?", form.PhoneNumber).RowsAffected == 0 {
+					return nil, jwt.ErrFailedAuthentication
+				}
+			} else {
 				return nil, jwt.ErrFailedAuthentication
 			}
+
+			fmt.Printf("user => %+v", user)
 
 			if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(form.Password)); err != nil {
 				return nil, jwt.ErrFailedAuthentication
