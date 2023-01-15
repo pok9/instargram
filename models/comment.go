@@ -1,13 +1,9 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 //date +%s
 //illegal cycle in declaration of Comment คือ มันเรียกใช้ Comment ซ้ำกัน ทำให้เกิดการเรียกใช้งานซ้ำกัน
 type Comment struct {
-	gorm.Model
+	Model
 	Comment            string   `json:"comment"`
 	UserID             uint     `json:"userID"`
 	User               User     `gorm:"foreignKey:UserID"`

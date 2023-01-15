@@ -49,3 +49,88 @@ func (u *User) UpdateUserBirdate(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
 }
+
+//follow user
+type followUserReq struct {
+	FollowedUserID string `json:"followedUserID" binding:"required"`
+}
+
+type followUserRes struct {
+	FollowingUserID string `json:"followingUserID,omitempty"`
+	FollowedUserID  string `json:"followedUserID,omitempty"`
+}
+
+func (u *User) FollowUser(ctx *gin.Context) {
+	sub, ok := ctx.Get("sub")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user := sub.(*models.User)
+
+	var followUserReq followUserReq
+	if err := ctx.ShouldBindJSON(&followUserReq); err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	follower := models.Follower{
+		FollowingUserID: user.ID,
+		FollowedUserID:  followUserReq.FollowedUserID,
+	}
+	if err := u.DB.Create(&follower).Error; err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	serializedFollower := followUserRes{}
+	copier.CopyWithOption(&serializedFollower, &follower, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	ctx.JSON(http.StatusOK, gin.H{"follower": serializedFollower})
+}
+
+type userRes struct {
+	ID       uint   `json:"id"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
+	FullName string `json:"fullName"`
+}
+
+// /auth/profile => jwt => sub (UserID) => User => User
+func (a *Auth) GetProfile(ctx *gin.Context) {
+	// user
+	sub, ok := ctx.Get("sub")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user := sub.(*models.User)
+
+	var serializedUser userRes
+	copier.Copy(&serializedUser, user)
+	ctx.JSON(http.StatusOK, gin.H{"user": serializedUser})
+}
+
+// func setUserImage(ctx *gin.Context, user *models.User) error {
+// 	file, _ := ctx.FormFile("avatar")
+// 	if file == nil {
+// 		return nil
+// 	}
+
+// 	if user.Avatar != "" { //ลบรูปภาพเก่าทั้ง
+// 		user.Avatar = strings.Replace(user.Avatar, os.Getenv("HOST"), "", 1)
+// 		pwd, _ := os.Getwd()
+// 		os.Remove(pwd + user.Avatar)
+// 	}
+
+// 	path := "uploads/users/" + strconv.Itoa(int(user.ID))
+// 	os.MkdirAll(path, os.ModePerm)
+// 	filename := path + "/" + file.Filename
+// 	if err := ctx.SaveUploadedFile(file, filename); err != nil {
+// 		return err
+// 	}
+
+// 	db := config.GetDB()
+// 	user.Avatar = os.Getenv("HOST") + "/" + filename
+// 	db.Save(user)
+
+// 	return nil
+// }

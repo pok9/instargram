@@ -1,12 +1,8 @@
 package models
 
-import (
-	"gorm.io/gorm"
-)
-
 //date +%s
 type Post struct {
-	gorm.Model
+	Model
 	Path       string   `json:"path"`
 	MediaType  string   `json:"mediaType"`
 	UserID     uint     `json:"userID"`
