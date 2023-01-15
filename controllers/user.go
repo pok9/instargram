@@ -165,6 +165,13 @@ func (u *User) FollowUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
 	}
+
+	//user.ID != followUserReq.FollowedUserID
+	if user.ID == followUserReq.FollowedUserID {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "you can't follow yourself"})
+		return
+	}
+
 	follower := models.Follower{
 		FollowingUserID: user.ID,
 		FollowedUserID:  followUserReq.FollowedUserID,
@@ -179,28 +186,46 @@ func (u *User) FollowUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"follower": serializedFollower})
 }
 
-// func setUserImage(ctx *gin.Context, user *models.User) error {
-// 	file, _ := ctx.FormFile("avatar")
-// 	if file == nil {
-// 		return nil
-// 	}
+//unfollow user
+type unfollowUserReq struct {
+	FollowedUserID string `json:"followedUserID" binding:"required"`
+}
 
-// 	if user.Avatar != "" { //ลบรูปภาพเก่าทั้ง
-// 		user.Avatar = strings.Replace(user.Avatar, os.Getenv("HOST"), "", 1)
-// 		pwd, _ := os.Getwd()
-// 		os.Remove(pwd + user.Avatar)
-// 	}
+type unfollowUserRes struct {
+	FollowingUserID string `json:"followingUserID,omitempty"`
+	FollowedUserID  string `json:"followedUserID,omitempty"`
+}
 
-// 	path := "uploads/users/" + strconv.Itoa(int(user.ID))
-// 	os.MkdirAll(path, os.ModePerm)
-// 	filename := path + "/" + file.Filename
-// 	if err := ctx.SaveUploadedFile(file, filename); err != nil {
-// 		return err
-// 	}
+func (u *User) UnfollowUser(ctx *gin.Context) {
+	sub, ok := ctx.Get("sub")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	user := sub.(*models.User)
 
-// 	db := config.GetDB()
-// 	user.Avatar = os.Getenv("HOST") + "/" + filename
-// 	db.Save(user)
+	var unfollowUserReq unfollowUserReq
+	if err := ctx.ShouldBindJSON(&unfollowUserReq); err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
 
-// 	return nil
-// }
+	//user.ID != followUserReq.FollowedUserID
+	if user.ID == unfollowUserReq.FollowedUserID {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": "you can't unfollow yourself"})
+		return
+	}
+
+	follower := models.Follower{
+		FollowingUserID: user.ID,
+		FollowedUserID:  unfollowUserReq.FollowedUserID,
+	}
+	if err := u.DB.Delete(&follower).Error; err != nil {
+		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+	serializedFollower := unfollowUserRes{}
+	copier.CopyWithOption(&serializedFollower, &follower, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	ctx.JSON(http.StatusOK, gin.H{"follower": serializedFollower})
+}

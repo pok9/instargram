@@ -30,5 +30,6 @@ func Serve(r *gin.Engine) {
 		userGroup.PUT("/birdate", userController.UpdateUserBirdate)
 		userGroup.PUT("/avatar", userController.UpdateUserAvatar)
 		userGroup.POST("/follow", userController.FollowUser)
+		userGroup.POST("/unfollow", userController.UnfollowUser)
 	}
 }
