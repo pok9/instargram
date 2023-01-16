@@ -3,8 +3,8 @@ package models
 //date +%s
 type Like struct {
 	Model
-	UserID     uint     `json:"userID"`
+	UserID     string   `json:"userID"`
 	User       User     `gorm:"foreignKey:UserID"`
-	PostMainID uint     `json:"postMainID"`
+	PostMainID string   `json:"postMainID"`
 	PostMain   PostMain `gorm:"foreignKey:PostMainID"`
 }

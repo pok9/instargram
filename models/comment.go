@@ -5,10 +5,10 @@ package models
 type Comment struct {
 	Model
 	Comment            string   `json:"comment"`
-	UserID             uint     `json:"userID"`
+	UserID             string   `json:"userID"`
 	User               User     `gorm:"foreignKey:UserID"`
-	PostMainID         uint     `json:"postMainID"`
+	PostMainID         string   `json:"postMainID"`
 	PostMain           PostMain `gorm:"foreignKey:PostMainID"`
-	CommentRepliedToID uint     `json:"commentRepliedToID"`
+	CommentRepliedToID string   `json:"commentRepliedToID"`
 	Replied            *Comment `gorm:"foreignKey:CommentRepliedToID"`
 }

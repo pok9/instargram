@@ -5,8 +5,8 @@ type Post struct {
 	Model
 	Path       string   `json:"path"`
 	MediaType  string   `json:"mediaType"`
-	UserID     uint     `json:"userID"`
+	UserID     string   `json:"userID"`
 	User       User     `gorm:"foreignKey:UserID"`
-	PostMainID uint     `json:"postMainID"`
+	PostMainID string   `json:"postMainID"`
 	PostMain   PostMain `gorm:"foreignKey:PostMainID"`
 }
