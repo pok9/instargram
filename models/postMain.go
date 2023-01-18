@@ -3,6 +3,11 @@ package models
 type PostMain struct {
 	Model
 	Caption string `json:"caption"`
-	UserID  string `json:"userID"`
-	User    User   `gorm:"foreignKey:UserID"`
+	//fk
+	UserID string `json:"userID"`
+
+	//seft pk to fk other table
+	Post    []Post    `gorm:"foreignkey:PostMainID"`
+	Like    []Like    `gorm:"foreignkey:PostMainID"`
+	Comment []Comment `gorm:"foreignkey:PostMainID"`
 }

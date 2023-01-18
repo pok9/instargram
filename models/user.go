@@ -10,12 +10,19 @@ import (
 type User struct {
 	Model
 	Email       string    `json:"email"`
-	PhoneNumber string    `json:"phoneNumber"`
+	PhoneNumber string    `json:"phoneNumber"` // unique
 	Password    string    `json:"password"`
 	Username    string    `json:"username" gorm:"uniqueIndex"` // unique
 	FullName    string    `json:"fullName"`
 	Birthdate   time.Time `json:"birthdate"`
 	Avatar      string    `json:"avatar"`
+
+	PostMain        []PostMain `gorm:"foreignkey:UserID"`
+	Post            []Post     `gorm:"foreignkey:UserID"`
+	Like            []Like     `gorm:"foreignkey:UserID"`
+	FollowingUserID []Follower `gorm:"foreignkey:FollowingUserID"`
+	FollowedUserID  []Follower `gorm:"foreignkey:FollowedUserID"`
+	Comment         []Comment  `gorm:"foreignkey:UserID"`
 }
 
 func (u *User) GenerateEncryptPassword() string {

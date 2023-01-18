@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,10 +20,11 @@ type User struct {
 }
 
 type userRes struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
-	FullName string `json:"fullName"`
+	ID        uint      `json:"id"`
+	Email     string    `json:"email"`
+	Birthdate time.Time `json:"birthdate"`
+	Avatar    string    `json:"avatar"`
+	FullName  string    `json:"fullName"`
 }
 
 // /auth/profile => jwt => sub (UserID) => User => User
@@ -117,13 +119,14 @@ func (u *User) UpdateUserAvatar(ctx *gin.Context) {
 
 	// Create Path
 	// ID => 8, uploads/users/8
-	path := "uploads/users/" + string(user.ID)
+	path := "uploads/users/" + strconv.Itoa(int(user.ID))
 	os.MkdirAll(path, 0755)
 
 	// Upload File
 
 	//uploads/users/8/image.png
 	filename := path + "/" + file.Filename
+	fmt.Printf("filename => %#v\n", filename)
 	if err := ctx.SaveUploadedFile(file, filename); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -144,12 +147,12 @@ func (u *User) UpdateUserAvatar(ctx *gin.Context) {
 
 //follow user
 type followUserReq struct {
-	FollowedUserID string `json:"followedUserID" binding:"required"`
+	FollowedUserID uint `json:"followedUserID" binding:"required"`
 }
 
 type followUserRes struct {
-	FollowingUserID string `json:"followingUserID,omitempty"`
-	FollowedUserID  string `json:"followedUserID,omitempty"`
+	FollowingUserID uint `json:"followingUserID,omitempty"`
+	FollowedUserID  uint `json:"followedUserID,omitempty"`
 }
 
 func (u *User) FollowUser(ctx *gin.Context) {
@@ -188,12 +191,12 @@ func (u *User) FollowUser(ctx *gin.Context) {
 
 //unfollow user
 type unfollowUserReq struct {
-	FollowedUserID string `json:"followedUserID" binding:"required"`
+	FollowedUserID uint `json:"followedUserID" binding:"required"`
 }
 
 type unfollowUserRes struct {
-	FollowingUserID string `json:"followingUserID,omitempty"`
-	FollowedUserID  string `json:"followedUserID,omitempty"`
+	FollowingUserID uint `json:"followingUserID,omitempty"`
+	FollowedUserID  uint `json:"followedUserID,omitempty"`
 }
 
 func (u *User) UnfollowUser(ctx *gin.Context) {
